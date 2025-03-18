@@ -1,6 +1,6 @@
 import { tool } from '@langchain/core/tools';
 import { OpenAIEmbeddings } from '@langchain/openai';
-import { query } from '../database/mysql-connection';
+import { query as mysqlQuery } from '../database/mysql-connection';
 import { z } from 'zod';
 
 export class ToolRegistry {
@@ -9,7 +9,7 @@ export class ToolRegistry {
   async employeeSearch(query: string, n = 5) {
     const queryEmbedding = await this.embeddings.embedQuery(query);
     
-    return query(
+    return mysqlQuery(
       `SELECT employee_id, full_name, metadata,
               JSON_EXTRACT(embedding, '$') AS embedding,
               DOT_PRODUCT(JSON_EXTRACT(embedding, '$'), CAST(? AS JSON)) AS similarity

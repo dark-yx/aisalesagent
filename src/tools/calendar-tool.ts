@@ -1,5 +1,6 @@
+
 import { tool } from '@langchain/core/tools';
-import { google } from 'googleapis';
+import { google, calendar_v3 } from 'googleapis';
 import { z } from 'zod';
 
 const calendar = google.calendar('v3');
@@ -7,10 +8,12 @@ const calendar = google.calendar('v3');
 export const calendarTool = tool(
   async ({ action, eventDetails }: {
     action: 'create' | 'update' | 'list';
-    eventDetails?: any;
+    eventDetails?: calendar_v3.Schema$Event;
   }) => {
     const auth = new google.auth.GoogleAuth({
-      credentials: JSON.parse(Buffer.from(process.env.GOOGLE_CALENDAR_CREDS, 'base64').toString()),
+      credentials: process.env.GOOGLE_CALENDAR_CREDS ? 
+        JSON.parse(Buffer.from(process.env.GOOGLE_CALENDAR_CREDS, 'base64').toString()) : 
+        undefined,
       scopes: ['https://www.googleapis.com/auth/calendar']
     });
 
@@ -18,22 +21,22 @@ export const calendarTool = tool(
 
     switch (action) {
       case 'create':
-        return calendar.events.insert({
+        return await calendar.events.insert({
           calendarId: 'primary',
-          auth: authClient,
+          auth: authClient as any,
           requestBody: eventDetails
         });
       case 'update':
-        return calendar.events.update({
+        return await calendar.events.update({
           calendarId: 'primary',
-          eventId: eventDetails.id,
-          auth: authClient,
+          eventId: eventDetails?.id || '',
+          auth: authClient as any,
           requestBody: eventDetails
         });
       case 'list':
-        return calendar.events.list({
+        return await calendar.events.list({
           calendarId: 'primary',
-          auth: authClient,
+          auth: authClient as any,
           timeMin: new Date().toISOString()
         });
       default:

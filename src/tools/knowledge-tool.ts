@@ -1,7 +1,16 @@
+
 import { tool } from '@langchain/core/tools';
 import { OpenAIEmbeddings } from '@langchain/openai';
 import { query } from '../database/mysql-connection';
 import { z } from 'zod';
+import { RowDataPacket } from 'mysql2';
+
+interface KnowledgeResult extends RowDataPacket {
+  category: string;
+  file_name: string;
+  content: string;
+  similarity: number;
+}
 
 export const knowledgeTool = tool(
   async ({ query: searchQuery, category }: { query: string; category?: string }) => {
@@ -16,12 +25,12 @@ export const knowledgeTool = tool(
        ORDER BY similarity DESC
        LIMIT 5`,
       [JSON.stringify(queryEmbedding), category, category]
-    );
+    ) as KnowledgeResult[];
 
-    return results.map((r: any) => ({
+    return results.map(r => ({
       category: r.category,
       file: r.file_name,
-      content: r.content.slice(0, 500) + '...', // Limitar el contenido
+      content: r.content.slice(0, 500) + '...',
       similarity: r.similarity
     }));
   },

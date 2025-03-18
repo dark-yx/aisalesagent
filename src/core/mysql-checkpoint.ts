@@ -34,7 +34,11 @@ export class MySQLSaver {
   }
 
   async loadState(threadId: string) {
-    const rows = await query("SELECT state FROM agent_states WHERE thread_id = ?", [threadId]);
-    return rows.length ? JSON.parse(rows[0].state) : null;
+    const result = await query("SELECT state FROM agent_states WHERE thread_id = ?", [threadId]);
+    const rows = Array.isArray(result) ? result : [result];
+    if (Array.isArray(rows) && rows.length > 0 && 'state' in rows[0]) {
+      return JSON.parse(rows[0].state as string);
+    }
+    return null;
   }
 }

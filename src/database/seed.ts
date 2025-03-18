@@ -3,7 +3,14 @@ import { query } from './mysql-connection';
 
 export async function seedDatabase() {
     // Generar datos sintéticos (similar al original)
-    const employees = []; 
+    interface Employee {
+        id: string;
+        firstName: string;
+        lastName: string;
+        position: string;
+        metadata: any;
+    }
+    const employees: Employee[] = []; 
     
     const embeddings = new OpenAIEmbeddings();
     

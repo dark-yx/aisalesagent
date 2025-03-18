@@ -7,7 +7,7 @@ import { knowledgeTool } from '../tools/knowledge-tool'; // Nueva importación
 export class AgentCoordinator {
   private agents: Record<string, any> = {};
   private toolRegistry: ToolRegistry;
-  
+
   constructor(private security: SecurityLayer) {
     this.initializeAgents();
     this.toolRegistry = new ToolRegistry();
@@ -15,26 +15,27 @@ export class AgentCoordinator {
   }
 
   private registerTools() {
-    this.toolRegistry.registerTool(knowledgeTool);
-
-    // Registrar otras herramientas aquí
-  }
+        if (this.toolRegistry && 'tools' in this.toolRegistry) {
+            (this.toolRegistry as any).tools.push(knowledgeTool);
+        }
+        // Registrar otras herramientas aquí
+    }
 
   async handleRequest(channel: string, message: any) {
     await this.security.validateRequest({
       token: message.token,
       encryptedData: message.encryptedData
     });
-    
+
     const agentType = this.determineAgentType(message.content);
     const agent = this.agents[agentType];
-    
+
     const response = await agent.processMessage({
       threadId: message.threadId,
       content: message.content,
       channel: channel
     });
-    
+
     return {
       ...response,
       securityToken: this.security.generateToken(response.threadId)
